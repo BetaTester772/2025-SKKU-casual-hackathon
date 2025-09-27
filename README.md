@@ -1,4 +1,4 @@
-# 2025-SKKU-casual-hackathon
+# Fam_iso
 
 ## how to run:
 

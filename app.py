@@ -917,7 +917,7 @@ def call_state_fn(state: State, key):
 print("Loading models (cached)...")
 resnet = get_facenet_model()
 face_detection = get_face_detector()
-whisper_model = get_whisper_model("base.en")
+whisper_model = get_whisper_model()
 
 # 여기서 미리 로드하고, 전역으로 들고만 있음 (스레드에서 새로 부르지 않음)
 vad_model, vad_utils = get_silero_vad_bundle()
