@@ -126,7 +126,7 @@ class VADRecorder:
         self.vad_iterator = self.utils[3](self.model)  # VADIterator
 
         self.SAMPLE_RATE = 16000
-        self.BUFFER_SIZE = self.SAMPLE_RATE * 60  # 1 minute buffer
+        self.BUFFER_SIZE = self.SAMPLE_RATE * 60 * 60  # 1 minute buffer
         self.THRESHOLD = 0.6
         self.MIN_DURATION = 0.5
         self.MARGIN = 1
