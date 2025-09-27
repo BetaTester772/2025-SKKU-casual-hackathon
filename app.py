@@ -78,7 +78,7 @@ DEFAULT_TTS_SR = 24000  # Kokoro sample rate
 @st.cache_resource
 def get_whisper_model(model_name="medium.en", device=None):
     import whisper
-    return whisper.load_model(model_name) if device is None else whisper.load_model(model_name, device=device)
+    return whisper.load_model(model_name, device=device) if device is None else whisper.load_model(model_name)
 
 
 @st.cache_resource
@@ -91,7 +91,7 @@ def get_silero_vad_bundle():
     model, utils = torch.hub.load(
             repo_or_dir='snakers4/silero-vad',
             model='silero_vad',
-            trust_repo=True
+            trust_repo=True,
     )
     return model, utils
 
@@ -107,7 +107,7 @@ def get_kokoro_pipeline():
         return None
     try:
         from kokoro import KPipeline
-        pipeline = KPipeline(lang_code=DEFAULT_TTS_LANG)
+        pipeline = KPipeline(lang_code=DEFAULT_TTS_LANG, device='mps')
         return pipeline
     except Exception as e:
         print(f"[TTS] Kokoro pipeline init failed: {e}")
@@ -626,7 +626,6 @@ class RealtimeSpeechOrchestrator:
         return "".join(self._full_text_chunks)
 
 
-
 def generate_family_briefing() -> str:
     """가족 구성원들의 최근 상황을 40-60초 분량으로 브리핑"""
     briefing_text = """안녕하세요! 오늘도 따뜻한 가족 소식을 전해드릴게요.
@@ -642,6 +641,7 @@ def generate_family_briefing() -> str:
 이렇게 각자의 자리에서 행복과 보람을 찾고 있는 우리 가족입니다. 오늘도 건강하고 즐거운 하루 되세요!"""
 
     return briefing_text
+
 
 # =========================
 # TTS helpers (Kokoro)
@@ -803,16 +803,8 @@ def start_asr_async(file_path: str):
             if BYE_EXIST:
                 # 간단한 고별 멘트만 즉시 합성/재생
                 if kokoro_pipeline is not None and ENABLE_TTS:
-                    orch = RealtimeSpeechOrchestrator(
-                            pipeline=kokoro_pipeline,
-                            sr=DEFAULT_TTS_SR,
-                            voice=DEFAULT_TTS_VOICE
-                    )
-                    orch.start()
-                    # BYE 텍스트 바로 투입
-                    orch.text_queue.put(build_tts_reply_text(ASR_TEXT, sh_current_user))
-                    orch.stop_text.set()
-                    orch.wait()
+                    reply_text = build_tts_reply_text(ASR_TEXT, SESSION_USER)
+                    sh_tts_file = synthesize_tts_kokoro(reply_text)
                 else:
                     print("[TTS] pipeline not available.")
                 sh_tts_file = None  # 파일 없음
@@ -934,7 +926,7 @@ def call_state_fn(state: State, key):
 print("Loading models (cached)...")
 resnet = get_facenet_model()
 face_detection = get_face_detector()
-whisper_model = get_whisper_model()
+whisper_model = get_whisper_model(device='MPS')
 
 # 여기서 미리 로드하고, 전역으로 들고만 있음 (스레드에서 새로 부르지 않음)
 vad_model, vad_utils = get_silero_vad_bundle()
@@ -950,7 +942,7 @@ print("Models loaded (using cache).")
 # =========================
 # Streamlit UI & Main Loop
 # =========================
-st.set_page_config(page_title="Face Kiosk", layout="wide")
+st.set_page_config(page_title="Fam_iso", layout="wide"), #page_icon="chart_with_upwards_trend")
 st.title("Fam_iso - Family Shared Voice AI Assistant")
 
 # Family Story Gallery
@@ -958,23 +950,32 @@ st.subheader("📸 Family Stories")
 
 # Family photo data
 family_photos = [
-    {"name": "아빠", "photo": "assets/dad.png", "summary": ["고기 굽기 딱 좋다~이제 한 번 뒤집고 김치 올려서 같이 먹자.", "소스는 쌈장 한 숟가락이면 충분해, 너무 많이 찍지 마라.", "구운 마늘이랑 고추도 챙겨라, 오늘 저녁 든든하다!"]},
-    {"name": "형", "photo": "assets/bro.png", "summary": ["시험 끝나서 친구들이랑 놀러옴 ㅋ", "오늘 감성 충전 완료✨ 보랏빛 방에서 잠깐 멍", "아빠랑 다음에 같이 오자고 약속함 ㅎㅎ"]},
-    {"name": "엄마", "photo": "assets/mom.png", "summary": ["오늘은 토요일💚 향기나는 사람처럼 따뜻하게 지내자~", "옆에 있는 것만으로도 서로 힘이 되는 가족!, 늘 건강하고 행복하장*^^*", "맛있는 거 챙겨 먹고, 마음도 향기롭게 보내요💐"]},
-    {"name": "나", "photo": "assets/me.png", "summary": ["도시 야경 산책 완료—물 위로 불빛이 쭉 이어져서 분위기 미쳤다이✨", "집 가는 길에 야식 포장할까? 가족 단톡에 주문 받습니다이 🙋‍♂️", "내일은 같이 산책갑시다이"]},
-    {"name": "나", "photo": "assets/hackathon_me.png", "summary": ["해커톤 현장 풀집중 모드 On", "처음보는 사람들이랑 해커톤중 ㅋㅋ...", "팀에 레전드 빌런있음;"]}
+        {"name"   : "아빠", "photo": "assets/dad.png",
+         "summary": ["고기 굽기 딱 좋다~이제 한 번 뒤집고 김치 올려서 같이 먹자.", "소스는 쌈장 한 숟가락이면 충분해, 너무 많이 찍지 마라.",
+                     "구운 마늘이랑 고추도 챙겨라, 오늘 저녁 든든하다!"]},
+        {"name"   : "형", "photo": "assets/bro.png",
+         "summary": ["시험 끝나서 친구들이랑 놀러옴 ㅋ", "오늘 감성 충전 완료✨ 보랏빛 방에서 잠깐 멍", "아빠랑 다음에 같이 오자고 약속함 ㅎㅎ"]},
+        {"name"   : "엄마", "photo": "assets/mom.png",
+         "summary": ["오늘은 토요일💚 향기나는 사람처럼 따뜻하게 지내자~", "옆에 있는 것만으로도 서로 힘이 되는 가족!, 늘 건강하고 행복하장*^^*",
+                     "맛있는 거 챙겨 먹고, 마음도 향기롭게 보내요💐"]},
+        {"name"   : "나", "photo": "assets/me.png",
+         "summary": ["도시 야경 산책 완료—물 위로 불빛이 쭉 이어져서 분위기 미쳤다이✨", "집 가는 길에 야식 포장할까? 가족 단톡에 주문 받습니다이 🙋‍♂️",
+                     "내일은 같이 산책갑시다이"]},
+        {"name"   : "나", "photo": "assets/hackathon_me.png",
+         "summary": ["해커톤 현장 풀집중 모드 On", "처음보는 사람들이랑 해커톤중 ㅋㅋ...", "팀에 레전드 빌런있음;"]}
 ]
 
 # Photo gallery in 5 columns
 photo_cols = st.columns(5)
 for i, photo_data in enumerate(family_photos):
     with photo_cols[i]:
-        if st.button(f"📷", key=f"photo_{i}", use_container_width=True):
+        if st.button(f"📷", key=f"photo_{i}", width='stretch'):
             st.session_state[f"enlarged_photo"] = i
         # Load and display image with fixed size
         try:
             from PIL import Image
             import os
+
             if os.path.exists(photo_data["photo"]):
                 img = Image.open(photo_data["photo"])
                 # Resize to square and maintain aspect ratio
@@ -1023,11 +1024,11 @@ with col_video:
 with col_ui:
     st.subheader("Group")
     group_ui = st.empty()  # ← 그룹 입력 전용 placeholder
-    
+
     # Family Briefing Section
     st.subheader("🎤 Family Briefing")
     briefing_slot = st.empty()
-    
+
     st.subheader("State Panel")
     state_badge = st.empty()
     message_slot = st.empty()
@@ -1055,7 +1056,7 @@ with group_ui.container():
     st.text_input(
             "그룹명 (BYE 후에만 다시 입력)",
             key=_gkey,  # ← 현재 키만 사용
-        placeholder="예: My family, Hackerton Team, ...",
+            placeholder="예: My family, Hackerton Team, ...",
             disabled=bool(_gval),  # 값이 있으면 잠금
     )
     st.caption(f"현재 그룹: {_gval or '-'}")
@@ -1132,7 +1133,7 @@ def ui_enroll_submit(new_name: str):
 def render_family_briefing():
     """가족 브리핑 패널 렌더링"""
     with briefing_slot.container():
-        if st.button("🎤 Tell me family updates", key="family_briefing_btn", use_container_width=True, type="primary"):
+        if st.button("🎤 Tell me family updates", key="family_briefing_btn", width='stretch', type="primary"):
             # 브리핑 텍스트 생성
             briefing_text = generate_family_briefing()
 
@@ -1194,14 +1195,14 @@ def render_state_panel(current_state: State):
                 globals()['enroll_face_ph'] = st.empty()
                 with st.form(key=current_enroll_form_key, clear_on_submit=False):
                     new_name = st.text_input("이름", key=current_enroll_name_key)
-                    submitted = st.form_submit_button("등록하기", use_container_width=True)
+                    submitted = st.form_submit_button("등록하기", width='stretch')
                 if submitted:
                     ui_enroll_submit(new_name)
 
         if enroll_face_ph is not None:
             if sh_face_crop is not None and sh_face_crop.size != 0:
                 face_rgb = cv2.cvtColor(sh_face_crop, cv2.COLOR_BGR2RGB)
-                enroll_face_ph.image(face_rgb, caption="등록할 얼굴", use_container_width=True)
+                enroll_face_ph.image(face_rgb, caption="등록할 얼굴", width='stretch')
             else:
                 enroll_face_ph.warning("얼굴이 감지되지 않았습니다. 카메라를 향해 한 명만 비춰주세요.")
     else:
@@ -1251,6 +1252,7 @@ def render_state_panel(current_state: State):
             remain = max(0.0, sh_timer_end - time.time())
             pct = min(max(1.0 - (remain / 2.0), 0.0), 1.0)
             st.progress(pct, text="Ending...")
+
 
 # Family Briefing Panel (render once outside the main loop)
 render_family_briefing()
@@ -1389,7 +1391,7 @@ if run:
                 frame_rgb,
                 channels="RGB",
                 caption="Live",
-                use_container_width=True,
+                width='stretch',
                 output_format="JPEG",
         )
         del resized, frame_rgb, display_frame

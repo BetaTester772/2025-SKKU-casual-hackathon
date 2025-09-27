@@ -157,7 +157,8 @@ def get_rag_response(
 
     # 5) call LLM
     # answer = llm_complete(model_name, prompt, system=system, max_tokens=600) #TODO: on-device-llm(sLM)으로 교체 예정
-    print(prompt, system)
+    print(f"[rag] prompt:\n{prompt}\n---")
+    print(f"[rag] system:\n{system}\n---")
     # answer = phi35_chat(prompt, system).split('\n')[0].split('.')[0]
     stream = chatgpt_chat_stream(prompt, system)
 
