@@ -626,6 +626,23 @@ class RealtimeSpeechOrchestrator:
         return "".join(self._full_text_chunks)
 
 
+
+def generate_family_briefing() -> str:
+    """가족 구성원들의 최근 상황을 40-60초 분량으로 브리핑"""
+    briefing_text = """안녕하세요! 오늘도 따뜻한 가족 소식을 전해드릴게요.
+
+먼저 아빠는 맛있는 고기를 구우며 가족들과 행복한 시간을 보내고 계세요. 김치와 함께 드시니 더욱 맛있어 보이네요.
+
+형은 힘든 시험이 끝나고 친구들과 즐거운 시간을 보내고 있어요. 잠시 쉬면서 보랏빛 방에서 감성 충전도 하고, 다음에는 아빠와 함께 나들이 약속도 했다고 하네요.
+
+엄마는 오늘도 향기로운 마음으로 가족을 생각하며 따뜻한 하루를 보내고 계세요. 가족이 서로에게 힘이 되어주는 모습이 정말 아름답습니다.
+
+그리고 막내는 아름다운 도시 야경을 보며 산책을 즐겼어요. 물 위로 반짝이는 불빛들이 환상적이었다고 하네요. 해커톤에도 열심히 참가해서 새로운 도전을 하고 있어요.
+
+이렇게 각자의 자리에서 행복과 보람을 찾고 있는 우리 가족입니다. 오늘도 건강하고 즐거운 하루 되세요!"""
+
+    return briefing_text
+
 # =========================
 # TTS helpers (Kokoro)
 # =========================
@@ -934,16 +951,71 @@ print("Models loaded (using cache).")
 # Streamlit UI & Main Loop
 # =========================
 st.set_page_config(page_title="Face Kiosk", layout="wide")
-st.title("Famigo AI")
+st.title("Fam_iso - Family Shared Voice AI Assistant")
+
+# Family Story Gallery
+st.subheader("📸 Family Stories")
+
+# Family photo data
+family_photos = [
+    {"name": "아빠", "photo": "assets/dad.png", "summary": ["고기 굽기 딱 좋다~이제 한 번 뒤집고 김치 올려서 같이 먹자.", "소스는 쌈장 한 숟가락이면 충분해, 너무 많이 찍지 마라.", "구운 마늘이랑 고추도 챙겨라, 오늘 저녁 든든하다!"]},
+    {"name": "형", "photo": "assets/bro.png", "summary": ["시험 끝나서 친구들이랑 놀러옴 ㅋ", "오늘 감성 충전 완료✨ 보랏빛 방에서 잠깐 멍", "아빠랑 다음에 같이 오자고 약속함 ㅎㅎ"]},
+    {"name": "엄마", "photo": "assets/mom.png", "summary": ["오늘은 토요일💚 향기나는 사람처럼 따뜻하게 지내자~", "옆에 있는 것만으로도 서로 힘이 되는 가족!, 늘 건강하고 행복하장*^^*", "맛있는 거 챙겨 먹고, 마음도 향기롭게 보내요💐"]},
+    {"name": "나", "photo": "assets/me.png", "summary": ["도시 야경 산책 완료—물 위로 불빛이 쭉 이어져서 분위기 미쳤다이✨", "집 가는 길에 야식 포장할까? 가족 단톡에 주문 받습니다이 🙋‍♂️", "내일은 같이 산책갑시다이"]},
+    {"name": "나", "photo": "assets/hackathon_me.png", "summary": ["해커톤 현장 풀집중 모드 On", "처음보는 사람들이랑 해커톤중 ㅋㅋ...", "팀에 레전드 빌런있음;"]}
+]
+
+# Photo gallery in 5 columns
+photo_cols = st.columns(5)
+for i, photo_data in enumerate(family_photos):
+    with photo_cols[i]:
+        if st.button(f"📷", key=f"photo_{i}", use_container_width=True):
+            st.session_state[f"enlarged_photo"] = i
+        # Load and display image with fixed size
+        try:
+            from PIL import Image
+            import os
+            if os.path.exists(photo_data["photo"]):
+                img = Image.open(photo_data["photo"])
+                # Resize to square and maintain aspect ratio
+                img = img.resize((500, 500), Image.Resampling.LANCZOS)
+                st.image(img, width=500)
+            else:
+                st.error(f"Image not found: {photo_data['photo']}")
+        except Exception as e:
+            st.error(f"Error loading image: {e}")
+        st.caption(f"**{photo_data['name']}**")
+
+# Enlarged photo modal
+if "enlarged_photo" in st.session_state:
+    enlarged_idx = st.session_state["enlarged_photo"]
+    enlarged_data = family_photos[enlarged_idx]
+
+    with st.container():
+        st.markdown("---")
+        col_img, col_summary = st.columns([1, 1])
+
+        with col_img:
+            st.image(enlarged_data["photo"], width=300)
+            st.markdown(f"### {enlarged_data['name']}의 스토리")
+
+        with col_summary:
+            st.markdown("### 🤖 AI 일상 요약")
+            for line in enlarged_data["summary"]:
+                st.write(f"• {line}")
+
+        if st.button("닫기", key="close_enlarged"):
+            del st.session_state["enlarged_photo"]
+            st.rerun()
+        st.markdown("---")
 
 col_video, col_ui = st.columns([3, 2], vertical_alignment="top")
 
 # Camera / Options
 with col_video:
-    st.subheader("Camera")
-    cam_index = st.number_input("Camera index", min_value=0, max_value=10, value=0, step=1)
-    width = st.slider("Frame width", 320, 1920, 640, step=10)
-    bbox_avg_n_ui = st.slider("BBOX smoothing (frames)", 1, 30, 5, help="Average the face bbox over N frames.")
+    cam_index = 0
+    width = 640
+    bbox_avg_n_ui = 5
     run = st.toggle("Run camera", value=True)
     frame_slot = st.empty()
 
@@ -951,6 +1023,11 @@ with col_video:
 with col_ui:
     st.subheader("Group")
     group_ui = st.empty()  # ← 그룹 입력 전용 placeholder
+    
+    # Family Briefing Section
+    st.subheader("🎤 Family Briefing")
+    briefing_slot = st.empty()
+    
     st.subheader("State Panel")
     state_badge = st.empty()
     message_slot = st.empty()
@@ -978,7 +1055,7 @@ with group_ui.container():
     st.text_input(
             "그룹명 (BYE 후에만 다시 입력)",
             key=_gkey,  # ← 현재 키만 사용
-            placeholder="예: slpr",
+        placeholder="예: My family, Hackerton Team, ...",
             disabled=bool(_gval),  # 값이 있으면 잠금
     )
     st.caption(f"현재 그룹: {_gval or '-'}")
@@ -1049,6 +1126,29 @@ def ui_enroll_submit(new_name: str):
 
     st.success(f"등록 완료: {new_name}")
     print("[DB Updated] ", name_list, embeddings.shape)
+
+
+# Family Briefing UI render helper
+def render_family_briefing():
+    """가족 브리핑 패널 렌더링"""
+    with briefing_slot.container():
+        if st.button("🎤 Tell me family updates", key="family_briefing_btn", use_container_width=True, type="primary"):
+            # 브리핑 텍스트 생성
+            briefing_text = generate_family_briefing()
+
+            # 브리핑 텍스트 표시
+            st.text_area("Briefing Content:", briefing_text, height=100, disabled=True)
+
+            # 더미 오디오 재생
+            audio_file_path = "audio/family_news.wav"
+            if os.path.exists(audio_file_path):
+                st.audio(audio_file_path, format="audio/wav", autoplay=True)
+                st.success("🔊 Playing family briefing!")
+            else:
+                st.warning("Audio file not found. Text-only briefing provided.")
+
+        # 간단한 도움말
+        st.caption("💡 Click the button to hear a 40-60 second voice briefing of your family's recent updates.")
 
 
 # UI render helper
@@ -1152,6 +1252,8 @@ def render_state_panel(current_state: State):
             pct = min(max(1.0 - (remain / 2.0), 0.0), 1.0)
             st.progress(pct, text="Ending...")
 
+# Family Briefing Panel (render once outside the main loop)
+render_family_briefing()
 
 # ========= run =========
 if run:
