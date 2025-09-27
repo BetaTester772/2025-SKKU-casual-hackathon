@@ -1140,7 +1140,7 @@ def render_family_briefing():
             st.text_area("Briefing Content:", briefing_text, height=100, disabled=True)
 
             # 더미 오디오 재생
-            audio_file_path = "audio/family_news.wav"
+            audio_file_path = "assets/family_news.wav"
             if os.path.exists(audio_file_path):
                 st.audio(audio_file_path, format="audio/wav", autoplay=True)
                 st.success("🔊 Playing family briefing!")
