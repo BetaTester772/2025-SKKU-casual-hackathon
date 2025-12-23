@@ -1,3 +1,29 @@
+"""
+RAG (Retrieval-Augmented Generation) 연결 모듈
+
+사용자 질의에 대해 관련 컨텍스트를 검색하고 LLM으로 응답을 생성합니다.
+OpenAI GPT API 스트리밍을 지원합니다.
+
+Functions:
+    get_rag_response: RAG 기반 응답 스트림 생성
+        - target='self': 본인 데이터만 검색
+        - target='team': 그룹 멤버 데이터 포함 검색
+        - target='user': 특정 사용자 데이터 검색
+    phi35_chat: Qualcomm Phi-3.5 온디바이스 LLM 호출 (실험적)
+    chatgpt_chat_stream: OpenAI GPT 스트리밍 호출
+
+Usage:
+    stream = get_rag_response(
+        user_id=1,
+        query="오늘 미팅 있나요?",
+        target="team",
+        group_name="family"
+    )
+    for event in stream:
+        if event.type == "response.output_text.delta":
+            print(event.delta)
+"""
+
 from __future__ import annotations
 
 import logging

@@ -1,3 +1,26 @@
+"""
+pgvector VectorStore 어댑터 모듈
+
+LlamaIndex VectorStore 인터페이스를 구현하여 PostgreSQL pgvector와 연동합니다.
+코사인 거리 기반 유사도 검색 및 메타데이터 필터링을 지원합니다.
+
+Classes:
+    PgVectorEmbeddingsStore: VectorStore 구현체
+        - add: 노드(임베딩) 추가
+        - delete: 노드 삭제
+        - query: 벡터 유사도 검색
+
+필터링:
+    - owner_id_in: 특정 소유자들의 데이터만 검색
+    - visibility_in: 특정 가시성 레벨만 검색
+    - text_ref_prefix: 텍스트 참조 접두사 매칭
+    - exclude_owner_id: 특정 소유자 제외
+
+Distance Metric:
+    - 코사인 거리 (<=>) 사용
+    - similarity = max(0, 1 - distance)
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

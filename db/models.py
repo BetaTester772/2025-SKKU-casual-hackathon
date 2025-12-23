@@ -1,3 +1,25 @@
+"""
+데이터베이스 ORM 모델 정의 모듈
+
+SQLAlchemy를 사용하여 PostgreSQL 데이터베이스 테이블을 정의합니다.
+pgvector 확장을 통해 벡터 임베딩 저장 및 검색을 지원합니다.
+
+Models:
+    Base: 모든 모델의 기본 클래스 (created_at, updated_at 자동 관리)
+    User: 사용자 정보 (이름, 프로필 JSON)
+    Group: 그룹 정보 (가족, 팀 등)
+    GroupMember: 그룹-사용자 관계 테이블 (N:M 관계)
+    Event: 일정/이벤트 정보
+    Embedding: 벡터 임베딩 저장 (pgvector, 1536차원)
+    AuditAccess: 접근 감사 로그
+
+Enums:
+    VisibilityLevel: 가시성 레벨 (self, group, public)
+
+Constants:
+    VECTOR_DIM: 벡터 차원 (1536, OpenAI text-embedding-3-small 기준)
+"""
+
 from __future__ import annotations
 import uuid
 from datetime import datetime, timezone

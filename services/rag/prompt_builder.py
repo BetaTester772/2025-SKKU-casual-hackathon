@@ -1,3 +1,18 @@
+"""
+가드레일 프롬프트 빌더 모듈
+
+RAG 응답 생성을 위한 시스템/사용자 프롬프트를 구성합니다.
+소유자 명시 규칙을 적용하여 정보 오인을 방지합니다.
+
+가드레일 규칙:
+    1. 현재 사용자 소유가 아닌 항목은 '당신의 것'이라 단정하지 않음
+    2. 타인 정보는 반드시 소유자 이름을 명시 (예: "철수의 일정...")
+    3. 모호한 경우 확인 질문 선호
+
+Functions:
+    build_guardrailed_prompt: (system, user) 메시지 튜플 반환
+"""
+
 from __future__ import annotations
 
 from typing import Iterable, Optional, Tuple

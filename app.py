@@ -1,3 +1,29 @@
+"""
+Fam_iso - Family Shared Voice AI Assistant
+
+메인 애플리케이션 모듈로, Streamlit 기반 UI와 상태 머신을 포함합니다.
+
+주요 기능:
+    - 얼굴 인식 기반 사용자 식별 (FaceNet + MediaPipe)
+    - 음성 활동 감지 및 녹음 (Silero VAD)
+    - 음성 인식 (OpenAI Whisper)
+    - RAG 기반 대화 응답 생성
+    - 실시간 TTS 스트리밍 (Kokoro)
+
+상태 머신 흐름:
+    IDLE -> USER_CHECK -> ENROLL/WELCOME -> ASR -> BYE -> IDLE
+
+Classes:
+    VADRecorder: 음성 활동 감지 및 녹음 처리
+    RealtimeSpeechOrchestrator: RAG 응답의 실시간 TTS 오케스트레이션
+    State: 애플리케이션 상태 정의 (IDLE, USER_CHECK, ENROLL, WELCOME, ASR, BYE)
+
+Usage:
+    uv run streamlit run app.py
+    또는
+    streamlit run app.py
+"""
+
 import os
 import time
 import ssl

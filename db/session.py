@@ -1,3 +1,30 @@
+"""
+데이터베이스 세션 관리 모듈
+
+SQLAlchemy 엔진 및 세션 팩토리를 설정합니다.
+동기(psycopg) 및 비동기(asyncpg) 연결을 모두 지원합니다.
+
+Environment Variables:
+    DATABASE_URL: PostgreSQL 연결 URL
+    DB_ECHO: SQL 로깅 활성화 (true/false)
+    DB_POOL_SIZE: 커넥션 풀 크기 (기본: 5)
+    DB_POOL_TIMEOUT: 풀 대기 타임아웃 (기본: 30초)
+    DB_POOL_RECYCLE: 커넥션 재활용 주기 (기본: 1800초)
+
+Functions:
+    get_db: 동기 세션 컨텍스트 매니저
+    get_async_db: 비동기 세션 컨텍스트 매니저
+    init_db: 동기 DB 초기화
+    init_db_async: 비동기 DB 초기화
+    ensure_extensions_sync: PostgreSQL 확장 설치 (동기)
+    ensure_extensions_async: PostgreSQL 확장 설치 (비동기)
+
+Attributes:
+    engine: SQLAlchemy 동기 엔진
+    async_engine: SQLAlchemy 비동기 엔진
+    SessionLocal: 동기 세션 팩토리
+    AsyncSessionLocal: 비동기 세션 팩토리
+"""
 
 from __future__ import annotations
 
