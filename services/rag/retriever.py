@@ -1,3 +1,23 @@
+"""
+벡터 검색 리트리버 모듈
+
+과거 대화 및 질의를 벡터 검색하여 RAG 컨텍스트를 제공합니다.
+가시성(visibility) 및 소유자(owner) 기반 접근 제어를 적용합니다.
+
+Classes:
+    PastQueryRAGRetriever: 고수준 RAG 리트리버
+        - search_self: 본인 데이터만 검색
+        - search_group_split: 그룹 멤버 데이터 포함 검색 (가중치 적용)
+        - search_by_target: 대상별 검색 라우팅
+        - save_past_query: 질의 저장
+
+검색 흐름:
+    1. 질의 텍스트를 임베딩으로 변환
+    2. 가시성/소유자 필터 적용
+    3. pgvector 코사인 유사도 검색
+    4. 결과 병합 및 중복 제거
+"""
+
 from __future__ import annotations
 
 import logging

@@ -1,3 +1,25 @@
+"""
+대화 요약 및 저장 모듈
+
+대화 세션 종료 시 대화 내용을 LLM으로 요약하고,
+임베딩으로 변환하여 벡터 DB에 저장합니다.
+
+요약 포함 내용:
+    - 대화 목적
+    - 핵심 사실
+    - 결정 사항
+    - 담당자 및 기한
+    - 다음 행동 항목
+
+Functions:
+    summarize_and_store: 대화 요약 생성 및 DB 저장
+        Returns: {'embedding_id', 'text_ref', 'summary_preview'}
+
+Usage:
+    from services.rag.conversation_summarizer import summarize_and_store
+    result = summarize_and_store(me_id=1, messages=transcript, visibility="group")
+"""
+
 from __future__ import annotations
 
 import logging

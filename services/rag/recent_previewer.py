@@ -1,3 +1,17 @@
+"""
+최근 대화/질의 미리보기 모듈
+
+사용자의 최근 대화 요약 및 질의를 조회하여 미리보기 문자열로 반환합니다.
+UI에서 사용자의 최근 활동을 표시하는 데 사용됩니다.
+
+Functions:
+    _recent_previews: 최근 N개의 요약/질의 미리보기 반환
+
+반환 형식:
+    - "[conv] 대화 요약 내용..."
+    - "[query] 질의 내용..."
+"""
+
 from __future__ import annotations
 import sys
 from typing import List

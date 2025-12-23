@@ -1,13 +1,24 @@
-from __future__ import annotations
-
-"""Lightweight repository helpers for relational CRUD/queries.
-
-This module replaces the previous monolithic `db_manager.py` for
-non-vector operations (users, groups, events, audit logs).
-
-Vector (embedding) operations live in:
-  app/services/rag/pgvector_adapter.py
 """
+데이터 접근 레이어 (Repository Pattern)
+
+관계형 데이터에 대한 CRUD 및 쿼리 헬퍼 함수를 제공합니다.
+벡터(임베딩) 작업은 services/rag/pgvector_adapter.py에서 처리합니다.
+
+Functions:
+    get_or_create_group_by_name: 그룹 조회 또는 생성
+    ensure_group_membership: 그룹 멤버십 확보
+    get_user_by_id: ID로 사용자 조회
+    get_users_by_ids: 여러 ID로 사용자 일괄 조회
+    get_user_by_face_id: Face ID로 사용자 조회
+    get_group_member_ids: 그룹 멤버 ID 목록 조회
+    get_group_member_ids_by_group_name: 그룹명으로 멤버 ID 조회
+    get_groups_for_user: 사용자 소속 그룹 목록 조회
+    create_event: 이벤트 생성
+    list_visible_events: 열람 가능한 이벤트 목록 조회
+    log_audit_access: 접근 감사 로그 기록
+"""
+
+from __future__ import annotations
 
 import logging
 import uuid

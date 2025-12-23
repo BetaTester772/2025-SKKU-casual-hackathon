@@ -1,3 +1,19 @@
+"""
+그룹 멤버십 관리 CLI 헬퍼 모듈
+
+CLI 환경에서 그룹 생성 및 가입을 인터랙티브하게 처리합니다.
+
+Functions:
+    ensure_group_interactive: 그룹 존재 확인 및 필요 시 생성/가입
+        - 그룹이 없으면 생성 여부 확인
+        - 사용자가 멤버가 아니면 가입 여부 확인
+        - 사용자가 거부하면 None 반환 (전체 그룹 대상)
+
+Usage:
+    from services.groups.membership import ensure_group_interactive
+    group_name = ensure_group_interactive(me_id=1, group_name="family")
+"""
+
 from __future__ import annotations
 from typing import Optional, Callable
 from sqlalchemy import select

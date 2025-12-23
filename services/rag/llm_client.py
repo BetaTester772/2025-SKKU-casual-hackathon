@@ -1,3 +1,23 @@
+"""
+LLM API 클라이언트 모듈
+
+OpenAI API 또는 로컬 스텁을 통해 텍스트 완성을 수행합니다.
+환경변수 OPENAI_API_KEY 설정 여부에 따라 자동으로 프로바이더를 선택합니다.
+
+Functions:
+    complete: 고수준 완성 진입점 (자동 프로바이더 선택)
+    _openai_complete: OpenAI API 호출
+    _local_stub_complete: 로컬 스텁 (테스트용)
+
+Environment Variables:
+    OPENAI_API_KEY: OpenAI API 키 (필수, OpenAI 사용 시)
+    OPENAI_API_BASE: OpenAI API 베이스 URL (선택)
+
+Usage:
+    from services.rag.llm_client import complete
+    answer = complete("gpt-4o-mini", "질문 내용", system="시스템 프롬프트")
+"""
+
 from __future__ import annotations
 
 import os
